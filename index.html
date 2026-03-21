@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <main class="app-container">
@@ -17,9 +18,12 @@
           <h1>Expense Tracker</h1>
           <p class="subtitle">Monthly planning, tracking, and utilization in one place.</p>
         </div>
-        <div class="field month-field">
-          <label for="month-select">Active Month</label>
-          <select id="month-select"></select>
+        <div class="header-controls">
+          <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">🌙</button>
+          <div class="field month-field">
+            <label for="month-select">Active Month</label>
+            <select id="month-select"></select>
+          </div>
         </div>
       </div>
 
@@ -61,13 +65,13 @@
       <div id="budget-alert-banner" class="budget-alert-banner" aria-live="polite"></div>
     </section>
 
-    <section class="tab-switcher">
-      <button class="tab-btn is-active" type="button" data-tab="entry">Data Entry</button>
-      <button class="tab-btn" type="button" data-tab="charts">Charts</button>
-      <button class="tab-btn" type="button" data-tab="config">Configuration</button>
+    <section class="tab-switcher" role="tablist">
+      <button class="tab-btn is-active" type="button" data-tab="entry" id="entry-tab" role="tab" aria-selected="true" aria-controls="entry-panel">Data Entry</button>
+      <button class="tab-btn" type="button" data-tab="charts" id="charts-tab" role="tab" aria-selected="false" aria-controls="charts-panel">Charts</button>
+      <button class="tab-btn" type="button" data-tab="config" id="config-tab" role="tab" aria-selected="false" aria-controls="config-panel">Configuration</button>
     </section>
 
-    <section class="tab-panel is-active" data-panel="entry">
+    <section class="tab-panel is-active" data-panel="entry" id="entry-panel" role="tabpanel" aria-labelledby="entry-tab">
       <div class="panel-grid">
         <section class="card form-card">
           <h2>Add Expense</h2>
@@ -101,31 +105,34 @@
         </section>
 
         <section class="card list-card">
-          <div class="list-header">
-            <h2 id="expenses-heading">Expenses</h2>
-            <div class="total-box">
-              <span>Total</span>
-              <strong id="total-amount">₹0.00</strong>
-            </div>
-          </div>
-          <ul id="expense-list" class="expense-list"></ul>
-          <p id="empty-state" class="empty-state">No expenses yet. Add your first expense.</p>
-        </section>
+           <div class="list-header">
+             <h2 id="expenses-heading">Expenses</h2>
+             <div class="total-box">
+               <span>Total</span>
+               <strong id="total-amount">₹0.00</strong>
+             </div>
+           </div>
+           <div class="search-filter">
+             <input type="text" id="expense-search" placeholder="Search expenses..." class="search-input" aria-label="Search expenses by description or category">
+           </div>
+           <ul id="expense-list" class="expense-list"></ul>
+           <p id="empty-state" class="empty-state">No expenses yet. Add your first expense.</p>
+         </section>
       </div>
     </section>
 
-    <section class="tab-panel" data-panel="charts">
+    <section class="tab-panel" data-panel="charts" id="charts-panel" role="tabpanel" aria-labelledby="charts-tab">
       <section class="card chart-card">
         <div class="chart-top">
           <h2>Monthly Utilization</h2>
           <div class="target-overview" id="target-overview"></div>
         </div>
-        <div id="category-chart" class="category-chart"></div>
+        <canvas id="category-chart" class="category-chart"></canvas>
         <p id="chart-empty-state" class="empty-state">No expenses in this month yet. Utilization is currently 0%.</p>
       </section>
     </section>
 
-    <section class="tab-panel" data-panel="config">
+    <section class="tab-panel" data-panel="config" id="config-panel" role="tabpanel" aria-labelledby="config-tab">
       <div class="panel-grid">
         <section class="card targets-card">
           <div class="targets-header">
@@ -153,10 +160,25 @@
           <div id="categories-list" class="categories-list"></div>
           <p id="categories-status" class="targets-status" aria-live="polite"></p>
         </section>
+
+        <section class="card data-card">
+          <div class="targets-header">
+            <h2>Data Backup</h2>
+            <p class="targets-month-label">Export or import your data</p>
+          </div>
+          <div class="data-actions">
+            <button id="export-data-btn" type="button" class="add-btn targets-btn">Export Data</button>
+            <input type="file" id="import-data-input" accept=".json" style="display: none;">
+            <button id="import-data-btn" type="button" class="reset-btn">Import Data</button>
+          </div>
+          <p id="data-status" class="targets-status" aria-live="polite"></p>
+        </section>
       </div>
     </section>
   </main>
 
-  <script src="script.js"></script>
+   <script src="utils.js"></script>
+   <script src="storage.js"></script>
+   <script src="ui.js"></script>
 </body>
 </html>

@@ -1,69 +1,27 @@
-const STORAGE_KEY = "expenseTrackerDataV2";
-const LEGACY_STORAGE_KEY = "expenses";
-const DEFAULT_CATEGORY_TARGETS = {
-  Grocery: 15000,
-  Entertainment: 10000,
-  Misc: 6000,
-  "Housing (Rent and Maintenance)": 45000,
-  Medicine: 2000,
-  Shopping: 6000,
-  Transportation: 8000,
-  Investments: 150000,
-};
-
-const expenseForm = document.getElementById("expense-form");
-const dateInput = document.getElementById("date");
-const amountInput = document.getElementById("amount");
-const categoryInput = document.getElementById("category");
-const descriptionInput = document.getElementById("description");
-const monthSelect = document.getElementById("month-select");
-const expensesHeading = document.getElementById("expenses-heading");
-const expenseList = document.getElementById("expense-list");
-const totalAmount = document.getElementById("total-amount");
-const emptyState = document.getElementById("empty-state");
-const targetOverview = document.getElementById("target-overview");
-const categoryChart = document.getElementById("category-chart");
-const chartEmptyState = document.getElementById("chart-empty-state");
-const targetsMonthLabel = document.getElementById("targets-month-label");
-const targetsEditor = document.getElementById("targets-editor");
-const saveTargetsBtn = document.getElementById("save-targets-btn");
-const resetTargetsBtn = document.getElementById("reset-targets-btn");
-const targetsStatus = document.getElementById("targets-status");
-const newCategoryNameInput = document.getElementById("new-category-name");
-const newCategoryTargetInput = document.getElementById("new-category-target");
-const addCategoryBtn = document.getElementById("add-category-btn");
-const categoriesList = document.getElementById("categories-list");
-const categoriesStatus = document.getElementById("categories-status");
-const tileMonthSpend = document.getElementById("tile-month-spend");
-const tileMonthTarget = document.getElementById("tile-month-target");
-const tileUtilization = document.getElementById("tile-utilization");
-const tileMonthCount = document.getElementById("tile-month-count");
-const tileTrendSpend = document.getElementById("tile-trend-spend");
-const tileTrendTarget = document.getElementById("tile-trend-target");
-const tileTrendUtilization = document.getElementById("tile-trend-utilization");
-const tileTrendMonths = document.getElementById("tile-trend-months");
-const summarySpendTile = document.getElementById("summary-spend-tile");
-const summaryTargetTile = document.getElementById("summary-target-tile");
-const summaryUtilizationTile = document.getElementById("summary-utilization-tile");
-const budgetAlertBanner = document.getElementById("budget-alert-banner");
-const tabButtons = document.querySelectorAll(".tab-btn");
-const tabPanels = document.querySelectorAll(".tab-panel");
-
 const state = loadState();
 state.selectedMonth = state.selectedMonth || getCurrentMonthKey();
 
 dateInput.valueAsDate = new Date();
+document.body.classList.toggle('dark', state.theme === 'dark');
+themeToggle.textContent = state.theme === 'dark' ? '☀️' : '🌙';
 renderApp();
 
-amountInput.addEventListener("input", validateAmountInput);
+const themeToggle = document.getElementById("theme-toggle");
+
+amountInput.addEventListener("input", () => validateAmountInput(amountInput));
 monthSelect.addEventListener("change", () => {
   state.selectedMonth = monthSelect.value;
   renderApp();
 });
+themeToggle.addEventListener("click", toggleTheme);
+expenseSearch.addEventListener("input", renderApp);
 saveTargetsBtn.addEventListener("click", saveCustomTargets);
 resetTargetsBtn.addEventListener("click", resetTargetsToDefault);
 addCategoryBtn.addEventListener("click", addCategory);
 categoriesList.addEventListener("click", handleCategoryAction);
+exportDataBtn.addEventListener("click", exportData);
+importDataBtn.addEventListener("click", () => importDataInput.click());
+importDataInput.addEventListener("change", importData);
 tabButtons.forEach((button) => {
   button.addEventListener("click", () => {
     setActiveTab(button.dataset.tab || "entry");
@@ -73,7 +31,7 @@ tabButtons.forEach((button) => {
 expenseForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
-  if (!validateAmountInput() || !expenseForm.reportValidity()) {
+  if (!validateAmountInput(amountInput) || !expenseForm.reportValidity()) {
     return;
   }
 
@@ -96,7 +54,7 @@ expenseForm.addEventListener("submit", (event) => {
   state.expensesByMonth[monthKey].push(expense);
   state.selectedMonth = monthKey;
 
-  saveState();
+  saveState(state);
   renderApp();
   expenseForm.reset();
   categoryInput.value = "";
@@ -113,9 +71,16 @@ expenseList.addEventListener("click", (event) => {
   const { id, month } = deleteButton.dataset;
   const monthExpenses = state.expensesByMonth[month] || [];
   state.expensesByMonth[month] = monthExpenses.filter((expense) => expense.id !== id);
-  saveState();
+  saveState(state);
   renderApp();
 });
+
+function toggleTheme() {
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  document.body.classList.toggle('dark', state.theme === 'dark');
+  themeToggle.textContent = state.theme === 'dark' ? '☀️' : '🌙';
+  saveState(state);
+}
 
 function renderApp() {
   renderMonthOptions();
