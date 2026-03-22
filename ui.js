@@ -42,6 +42,12 @@ const exportDataBtn = document.getElementById("export-data-btn");
 const importDataBtn = document.getElementById("import-data-btn");
 const importDataInput = document.getElementById("import-data-input");
 const dataStatus = document.getElementById("data-status");
+const recurringDescriptionInput = document.getElementById("recurring-description");
+const recurringAmountInput = document.getElementById("recurring-amount");
+const recurringCategoryInput = document.getElementById("recurring-category");
+const addRecurringBtn = document.getElementById("add-recurring-btn");
+const recurringList = document.getElementById("recurring-list");
+const recurringStatus = document.getElementById("recurring-status");
 const tabButtons = document.querySelectorAll(".tab-btn");
 const tabPanels = document.querySelectorAll(".tab-panel");
 
@@ -49,6 +55,7 @@ function renderApp() {
   renderMonthOptions();
   renderCategoryOptions();
   renderCategoryManager();
+  renderRecurringManager();
   const monthExpenses = getSelectedMonthExpenses();
   const searchTerm = expenseSearch.value.toLowerCase();
   const filteredExpenses = monthExpenses.filter(expense =>
@@ -115,6 +122,21 @@ function renderCategoryManager() {
     .join("");
 }
 
+function renderRecurringManager() {
+  const options = state.categories
+    .map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`)
+    .join("");
+  recurringCategoryInput.innerHTML = `<option value="" selected disabled>Select a category</option>${options}`;
+  recurringList.innerHTML = state.recurringExpenses
+    .map((exp, index) => `
+      <div class="recurring-item">
+        <span>${escapeHtml(exp.description)} - ${formatCurrency(exp.amount)} (${escapeHtml(exp.category)})</span>
+        <button class="remove-recurring-btn" data-index="${index}" type="button">Remove</button>
+      </div>
+    `)
+    .join("");
+}
+
 function addCategory() {
   const name = newCategoryNameInput.value.trim();
   const targetRaw = newCategoryTargetInput.value.trim();
@@ -141,6 +163,49 @@ function addCategory() {
   categoriesStatus.textContent = `Added category "${name}".`;
   newCategoryNameInput.value = "";
   newCategoryTargetInput.value = "";
+}
+
+function addRecurring() {
+  const description = recurringDescriptionInput.value.trim();
+  const amountRaw = recurringAmountInput.value.trim();
+  const amount = Number.parseFloat(amountRaw);
+  const category = recurringCategoryInput.value.trim();
+
+  if (!description) {
+    recurringStatus.textContent = "Description is required.";
+    return;
+  }
+  if (!Number.isFinite(amount) || amount <= 0) {
+    recurringStatus.textContent = "Please enter a valid amount greater than 0.";
+    return;
+  }
+  if (!category) {
+    recurringStatus.textContent = "Category is required.";
+    return;
+  }
+
+  state.recurringExpenses.push({
+    description,
+    amount,
+    category
+  });
+  saveState(state);
+  renderApp();
+  recurringStatus.textContent = `Added recurring expense "${description}".`;
+  recurringDescriptionInput.value = "";
+  recurringAmountInput.value = "";
+  recurringCategoryInput.value = "";
+}
+
+function handleRecurringAction(event) {
+  const removeButton = event.target.closest(".remove-recurring-btn");
+  if (!removeButton) return;
+  const index = Number.parseInt(removeButton.dataset.index);
+  if (Number.isNaN(index)) return;
+  const removed = state.recurringExpenses.splice(index, 1)[0];
+  saveState(state);
+  renderApp();
+  recurringStatus.textContent = `Removed recurring expense "${removed.description}".`;
 }
 
 function handleCategoryAction(event) {
@@ -447,6 +512,14 @@ renderApp();
 amountInput.addEventListener("input", () => validateAmountInput(amountInput));
 monthSelect.addEventListener("change", () => {
   state.selectedMonth = monthSelect.value;
+  if (!state.expensesByMonth[state.selectedMonth]) {
+    state.expensesByMonth[state.selectedMonth] = state.recurringExpenses.map(exp => ({
+      ...exp,
+      date: getCurrentMonthKey() === state.selectedMonth ? new Date().toISOString().slice(0,10) : getFirstDayOfMonth(state.selectedMonth),
+      id: crypto.randomUUID()
+    }));
+    saveState(state);
+  }
   renderApp();
 });
 themeToggle.addEventListener("click", toggleTheme);
@@ -455,6 +528,8 @@ saveTargetsBtn.addEventListener("click", saveCustomTargets);
 resetTargetsBtn.addEventListener("click", resetTargetsToDefault);
 addCategoryBtn.addEventListener("click", addCategory);
 categoriesList.addEventListener("click", handleCategoryAction);
+addRecurringBtn.addEventListener("click", addRecurring);
+recurringList.addEventListener("click", handleRecurringAction);
 exportDataBtn.addEventListener("click", exportData);
 importDataBtn.addEventListener("click", () => importDataInput.click());
 importDataInput.addEventListener("change", importData);

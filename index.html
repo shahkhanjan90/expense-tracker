@@ -173,6 +173,21 @@
           </div>
           <p id="data-status" class="targets-status" aria-live="polite"></p>
         </section>
+
+        <section class="card recurring-card">
+          <div class="targets-header">
+            <h2>Recurring Expenses</h2>
+            <p class="targets-month-label">Auto-added to new months</p>
+          </div>
+          <div class="recurring-create">
+            <input id="recurring-description" type="text" placeholder="Description (e.g., Rent)">
+            <input id="recurring-amount" type="number" min="0" step="1" placeholder="Amount (INR)">
+            <select id="recurring-category"></select>
+            <button id="add-recurring-btn" type="button" class="add-btn targets-btn">Add Recurring</button>
+          </div>
+          <div id="recurring-list" class="recurring-list"></div>
+          <p id="recurring-status" class="targets-status" aria-live="polite"></p>
+        </section>
       </div>
     </section>
   </main>

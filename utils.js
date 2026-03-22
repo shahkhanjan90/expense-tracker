@@ -69,6 +69,11 @@ function getPreviousMonthKey(monthKey) {
   return `${previousYear}-${previousMonth}`;
 }
 
+function getFirstDayOfMonth(monthKey) {
+  const [year, month] = monthKey.split("-").map(Number);
+  return new Date(year, month - 1, 1).toISOString().slice(0, 10);
+}
+
 function renderTrend(element, currentValue, previousValue, formatter, suffixText) {
   if (!element) {
     return;

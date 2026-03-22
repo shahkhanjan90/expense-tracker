@@ -9,6 +9,7 @@ function loadState() {
     categories: Object.keys(DEFAULT_CATEGORY_TARGETS),
     categoryTargets: { ...DEFAULT_CATEGORY_TARGETS },
     theme: 'light',
+    recurringExpenses: [],
   };
 
   try {
@@ -31,6 +32,7 @@ function loadState() {
         ? parsed.categoryTargets
         : { ...DEFAULT_CATEGORY_TARGETS },
       theme: typeof parsed.theme === 'string' ? parsed.theme : 'light',
+      recurringExpenses: Array.isArray(parsed.recurringExpenses) ? parsed.recurringExpenses : [],
     };
 
     const categorySet = new Set(merged.categories);
