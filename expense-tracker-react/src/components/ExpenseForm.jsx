@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { AppContext } from '../context/AppContext';
 
-const ExpenseForm = ({ onAddExpense, categories }) => {
+const ExpenseForm = () => {
+  const { addExpense, categories } = useContext(AppContext);
   const [formData, setFormData] = useState({
     date: '',
     amount: '',
@@ -38,8 +40,8 @@ const ExpenseForm = ({ onAddExpense, categories }) => {
       date: formData.date,
     };
 
-    // Call the onAddExpense prop
-    onAddExpense(newExpense);
+    // Call addExpense from context
+    addExpense(newExpense);
 
     // Reset form fields
     setFormData({

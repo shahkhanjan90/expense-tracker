@@ -1,6 +1,9 @@
-import React from "react";
+import { useContext } from "react";
+import { AppContext } from "../context/AppContext";
 
-const ExpenseList = ({ expenses, onDelete }) => {
+const ExpenseList = () => {
+  const { expenses, deleteExpense } = useContext(AppContext);
+
   if (!expenses.length) {
     return <p>No expenses yet</p>;
   }
@@ -27,7 +30,7 @@ const ExpenseList = ({ expenses, onDelete }) => {
 
           <div>₹{expense.amount}</div>
 
-          <button onClick={() => onDelete(expense.id)}>
+          <button onClick={() => deleteExpense(expense.id)}>
             Delete
           </button>
         </div>
