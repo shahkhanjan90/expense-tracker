@@ -1,0 +1,39 @@
+import React from "react";
+
+const ExpenseList = ({ expenses, onDelete }) => {
+  if (!expenses.length) {
+    return <p>No expenses yet</p>;
+  }
+
+  return (
+    <div>
+      <h2>Expenses</h2>
+
+      {expenses.map((expense) => (
+        <div
+          key={expense.id}
+          style={{
+            border: "1px solid #ccc",
+            padding: "10px",
+            marginBottom: "10px",
+            borderRadius: "8px",
+          }}
+        >
+          <div>
+            <strong>{expense.category}</strong>
+          </div>
+
+          <div>{expense.description}</div>
+
+          <div>₹{expense.amount}</div>
+
+          <button onClick={() => onDelete(expense.id)}>
+            Delete
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default ExpenseList;
