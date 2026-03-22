@@ -1,3 +1,6 @@
+// Utility functions for expense calculations
+// All functions are pure and reusable
+
 const DEFAULT_CATEGORY_TARGETS = {
   Grocery: 15000,
   Entertainment: 10000,
@@ -127,3 +130,25 @@ function getTargetsForMonth(monthKey, categories, targetsByMonth, categoryTarget
     return accumulator;
   }, {});
 }
+
+export const getTotalExpenses = (expenses) => {
+  return expenses.reduce((total, expense) => total + (Number(expense.amount) || 0), 0);
+};
+
+export const getCategoryTotals = (expenses) => {
+  return expenses.reduce((totals, expense) => {
+    const category = expense.category || 'Uncategorized';
+    totals[category] = (totals[category] || 0) + (Number(expense.amount) || 0);
+    return totals;
+  }, {});
+};
+
+export const getMonthlyExpenses = (expenses, month) => {
+  // month in YYYY-MM format
+  return expenses.filter(expense => expense.date && expense.date.startsWith(month));
+};
+
+export const getUtilization = (total, target) => {
+  if (target === 0) return 0;
+  return (total / target) * 100;
+};
