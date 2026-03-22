@@ -16,23 +16,10 @@ const AppProvider = ({ children }) => {
       const cats = await getCategories();
       setCategories(cats); // Keep as array of objects
       const targs = await getTargets();
-      // Ensure default targets for activeMonth
-      const existingTargets = targs.filter(t => t.month === activeMonth);
-      const updatedTargs = [...targs];
-      cats.forEach(cat => {
-        const exists = existingTargets.find(t => t.category === cat.name);
-        if (!exists) {
-          updatedTargs.push({
-            category: cat.name,
-            month: activeMonth,
-            targets: cat.defaultTarget || 0
-          });
-        }
-      });
-      setTargets(updatedTargs);
+      setTargets(targs);
     };
     loadData();
-  }, [activeMonth]); // Add activeMonth to dependencies
+  }, []);
 
   const addExpense = async (expense) => {
     const updatedExpenses = await addExpenseAPI(expense);

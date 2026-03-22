@@ -3,9 +3,9 @@ import TargetsManager from '../components/TargetsManager';
 
 const Configuration = () => {
   return (
-    <div style={{ padding: '20px' }}>
+    <div>
       <h1>Configuration</h1>
-      <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
+      <div className="flex-row">
         <div style={{ flex: 1 }}>
           <TargetsManager />
         </div>

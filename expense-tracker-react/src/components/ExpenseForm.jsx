@@ -54,7 +54,7 @@ const ExpenseForm = () => {
   };
 
   return (
-    <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '8px', margin: '20px 0' }}>
+    <div className="card">
       <h2>Add Expense</h2>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '10px' }}>
@@ -65,7 +65,8 @@ const ExpenseForm = () => {
             value={formData.date}
             onChange={handleChange}
             required
-            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '5px' }}
+            className="input"
+            style={{ marginTop: '5px' }}
           />
         </div>
         <div style={{ marginBottom: '10px' }}>
@@ -79,7 +80,8 @@ const ExpenseForm = () => {
             step="1"
             placeholder="0"
             required
-            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '5px' }}
+            className="input"
+            style={{ marginTop: '5px' }}
           />
         </div>
         <div style={{ marginBottom: '10px' }}>
@@ -89,7 +91,8 @@ const ExpenseForm = () => {
             value={formData.category}
             onChange={handleChange}
             required
-            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '5px' }}
+            className="input"
+            style={{ marginTop: '5px' }}
           >
             <option value="" disabled>Select a category</option>
             {categories.map(cat => (
@@ -106,19 +109,13 @@ const ExpenseForm = () => {
             onChange={handleChange}
             placeholder="What was this expense for?"
             required
-            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '5px' }}
+            className="input"
+            style={{ marginTop: '5px' }}
           />
         </div>
         <button
           type="submit"
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#4f46e5',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
+          className="button"
         >
           Add Expense
         </button>

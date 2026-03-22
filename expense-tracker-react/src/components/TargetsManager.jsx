@@ -13,8 +13,13 @@ const TargetsManager = () => {
         acc[target.category] = target.targets;
         return acc;
       }, {});
-    setTargetValues(existingTargets);
-  }, [targets, activeMonth]);
+    // For categories without custom targets, use default
+    const targetValuesWithDefaults = categories.reduce((acc, cat) => {
+      acc[cat.name] = existingTargets[cat.name] || cat.defaultTarget || 0;
+      return acc;
+    }, {});
+    setTargetValues(targetValuesWithDefaults);
+  }, [targets, activeMonth, categories]);
 
   const handleChange = (categoryName, value) => {
     setTargetValues({
@@ -34,7 +39,7 @@ const TargetsManager = () => {
   };
 
   return (
-    <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '8px', margin: '20px 0' }}>
+    <div className="card">
       <h2>Manage Targets for {activeMonth}</h2>
       {categories.map(category => (
         <div key={category.id} style={{ marginBottom: '15px' }}>
@@ -44,11 +49,11 @@ const TargetsManager = () => {
             value={targetValues[category.name] || ''}
             onChange={(e) => handleChange(category.name, e.target.value)}
             placeholder="Enter target amount"
-            style={{ padding: '8px', width: '100%' }}
+            className="input"
           />
         </div>
       ))}
-      <button onClick={handleSave} style={{ padding: '10px 20px', marginTop: '20px' }}>
+      <button onClick={handleSave} className="button" style={{ marginTop: '20px' }}>
         Save Targets
       </button>
     </div>

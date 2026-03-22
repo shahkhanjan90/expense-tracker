@@ -27,7 +27,7 @@ const CategoryManager = () => {
   };
 
   return (
-    <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '8px', margin: '20px 0' }}>
+    <div className="card">
       <h2>Manage Categories</h2>
       <div style={{ marginBottom: '20px' }}>
         <input
@@ -35,9 +35,10 @@ const CategoryManager = () => {
           value={newCategory}
           onChange={(e) => setNewCategory(e.target.value)}
           placeholder="New category name"
-          style={{ padding: '8px', marginRight: '10px' }}
+          className="input"
+          style={{ marginRight: '10px', marginBottom: '10px' }}
         />
-        <button onClick={handleAddCategory} style={{ padding: '8px 16px' }}>
+        <button onClick={handleAddCategory} className="button">
           Add Category
         </button>
       </div>
@@ -45,7 +46,7 @@ const CategoryManager = () => {
         {categories.map((category, index) => (
           <li key={category.id || index} style={{ padding: '5px 0', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>{category.name} - Default Target: ₹{category.defaultTarget || 0}</span>
-            <button onClick={() => handleRemoveCategory(category.id)} style={{ marginLeft: '10px' }}>
+            <button onClick={() => handleRemoveCategory(category.id)} className="button" style={{ padding: '6px 12px', fontSize: '14px' }}>
               Remove
             </button>
           </li>

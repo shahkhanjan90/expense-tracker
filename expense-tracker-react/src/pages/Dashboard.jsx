@@ -4,10 +4,10 @@ import ExpenseList from '../components/ExpenseList';
 
 const Dashboard = () => {
   return (
-    <div style={{ padding: '20px' }}>
+    <div>
       <h1>Dashboard</h1>
       <SummaryCards />
-      <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
+      <div className="flex-row">
         <div style={{ flex: 1 }}>
           <ExpenseForm />
         </div>

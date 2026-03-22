@@ -1,7 +1,7 @@
 const Charts = () => {
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Charts</h1>
+    <div className="card">
+      <h2>Charts</h2>
       <p>Charts will be implemented here.</p>
     </div>
   );
