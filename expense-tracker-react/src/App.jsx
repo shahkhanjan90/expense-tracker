@@ -1,31 +1,26 @@
 import { useState } from "react";
+import ExpenseForm from "./components/ExpenseForm";
 import ExpenseList from "./components/ExpenseList";
 
 function App() {
-  const [expenses, setExpenses] = useState([
-    {
-      id: "1",
-      amount: 2000,
-      category: "Medicine",
-      description: "Medicines",
-    },
-    {
-      id: "2",
-      amount: 31000,
-      category: "Housing",
-      description: "Rent",
-    },
-  ]);
+  const [expenses, setExpenses] = useState([]);
 
-  const handleDelete = (id) => {
-    setExpenses(expenses.filter((e) => e.id !== id));
+  const categories = ["Food", "Travel", "Shopping", "Medicine", "Housing"];
+
+  const handleAddExpense = (newExpense) => {
+    // Add new expense to the top of the list
+    setExpenses([newExpense, ...expenses]);
+  };
+
+  const handleDeleteExpense = (id) => {
+    setExpenses(expenses.filter(expense => expense.id !== id));
   };
 
   return (
     <div style={{ padding: "20px" }}>
       <h1>Expense Tracker</h1>
-
-      <ExpenseList expenses={expenses} onDelete={handleDelete} />
+      <ExpenseForm onAddExpense={handleAddExpense} categories={categories} />
+      <ExpenseList expenses={expenses} onDelete={handleDeleteExpense} />
     </div>
   );
 }
