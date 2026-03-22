@@ -30,7 +30,7 @@ const ExpenseList = () => {
 
           <div>₹{expense.amount}</div>
 
-          <button onClick={() => deleteExpense(expense.id)}>
+          <button onClick={async () => await deleteExpense(expense.id)}>
             Delete
           </button>
         </div>

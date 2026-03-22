@@ -1,4 +1,5 @@
-import { createContext, useState } from 'react';
+import { createContext, useState, useEffect } from 'react';
+import { getExpenses, addExpense as addExpenseAPI, deleteExpense as deleteExpenseAPI } from '../services/api';
 
 const AppContext = createContext();
 
@@ -7,12 +8,22 @@ const AppProvider = ({ children }) => {
   const [categories] = useState(["Food", "Travel", "Shopping", "Medicine", "Housing"]);
   const [activeMonth, setActiveMonth] = useState(new Date().toISOString().slice(0, 7)); // Default to current month (YYYY-MM)
 
-  const addExpense = (expense) => {
-    setExpenses([expense, ...expenses]); // Add new expense at the top
+  useEffect(() => {
+    const loadExpenses = async () => {
+      const data = await getExpenses();
+      setExpenses(data);
+    };
+    loadExpenses();
+  }, []);
+
+  const addExpense = async (expense) => {
+    const updatedExpenses = await addExpenseAPI(expense);
+    setExpenses(updatedExpenses);
   };
 
-  const deleteExpense = (id) => {
-    setExpenses(expenses.filter(exp => exp.id !== id)); // Remove expense by id
+  const deleteExpense = async (id) => {
+    const updatedExpenses = await deleteExpenseAPI(id);
+    setExpenses(updatedExpenses);
   };
 
   return (

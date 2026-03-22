@@ -18,7 +18,7 @@ const ExpenseForm = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validation
@@ -38,10 +38,11 @@ const ExpenseForm = () => {
       category: formData.category,
       description: formData.description,
       date: formData.date,
+      createdAt: new Date().toISOString(),
     };
 
-    // Call addExpense from context
-    addExpense(newExpense);
+    // Call addExpense from context (async)
+    await addExpense(newExpense);
 
     // Reset form fields
     setFormData({
