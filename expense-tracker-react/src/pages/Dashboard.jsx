@@ -7,8 +7,14 @@ const Dashboard = () => {
     <div style={{ padding: '20px' }}>
       <h1>Dashboard</h1>
       <SummaryCards />
-      <ExpenseForm />
-      <ExpenseList />
+      <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
+        <div style={{ flex: 1 }}>
+          <ExpenseForm />
+        </div>
+        <div style={{ flex: 1 }}>
+          <ExpenseList />
+        </div>
+      </div>
     </div>
   );
 };

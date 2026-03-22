@@ -94,6 +94,22 @@ export const addCategory = async (category) => {
   }
 };
 
+export const deleteCategory = async (id) => {
+  try {
+    const response = await fetch(`${BASE_URL}${CATEGORIES_SHEET}/id/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error(`DELETE failed: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    throw error;
+  }
+};
+
 // Targets
 export const getTargets = async () => {
   try {
@@ -111,18 +127,54 @@ export const getTargets = async () => {
 
 export const addOrUpdateTarget = async (target) => {
   try {
-    const response = await fetch(BASE_URL + TARGETS_SHEET, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(target), // No type needed for separate sheet
-    });
-    if (!response.ok) {
-      throw new Error(`POST failed: ${response.status}`);
+    const currentTargets = await getTargets();
+    console.log('Current targets:', currentTargets);
+    console.log('Looking for category:', target.category, 'month:', target.month);
+    const existing = currentTargets.find(t => t.category === target.category && t.month === target.month);
+    console.log('Existing target:', existing);
+
+    if (existing) {
+      // Update existing target
+      console.log('Updating target with id:', existing.id);
+      const response = await fetch(`${BASE_URL}/id/${existing.id}${TARGETS_SHEET}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ targets: target.targets }),
+      });
+      if (!response.ok) {
+        console.error('PUT response status:', response.status);
+        const errorText = await response.text();
+        console.error('PUT error:', errorText);
+        throw new Error(`PUT failed: ${response.status}`);
+      }
+      console.log('PUT successful');
+    } else {
+      // Add new target
+      const maxId = currentTargets.length > 0 ? Math.max(...currentTargets.map(t => Number(t.id) || 0)) : 0;
+      const newTarget = { id: maxId + 1, ...target };
+      console.log('Adding new target:', newTarget);
+      const response = await fetch(BASE_URL + TARGETS_SHEET, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newTarget),
+      });
+      if (!response.ok) {
+        console.error('POST response status:', response.status);
+        const errorText = await response.text();
+        console.error('POST error:', errorText);
+        throw new Error(`POST failed: ${response.status}`);
+      }
+      console.log('POST successful');
     }
-    const data = await response.json();
-    return data;
+
+    // Return updated targets
+    const updated = await getTargets();
+    console.log('Updated targets:', updated);
+    return updated;
   } catch (error) {
     console.error('Error adding/updating target:', error);
     throw error;

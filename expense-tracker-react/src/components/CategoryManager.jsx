@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { AppContext } from '../context/AppContext';
 
 const CategoryManager = () => {
-  const { categories, addCategory } = useContext(AppContext);
+  const { categories, addCategory, removeCategory } = useContext(AppContext);
   const [newCategory, setNewCategory] = useState('');
 
   const handleAddCategory = async () => {
@@ -16,6 +16,14 @@ const CategoryManager = () => {
     }
     await addCategory(newCategory.trim());
     setNewCategory('');
+  };
+
+  const handleRemoveCategory = async (id) => {
+    if (categories.length <= 1) {
+      alert('At least one category is required');
+      return;
+    }
+    await removeCategory(id);
   };
 
   return (
@@ -35,8 +43,11 @@ const CategoryManager = () => {
       </div>
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {categories.map((category, index) => (
-          <li key={category.id || index} style={{ padding: '5px 0', borderBottom: '1px solid #eee' }}>
-            {category.name}
+          <li key={category.id || index} style={{ padding: '5px 0', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>{category.name} - Default Target: ₹{category.defaultTarget || 0}</span>
+            <button onClick={() => handleRemoveCategory(category.id)} style={{ marginLeft: '10px' }}>
+              Remove
+            </button>
           </li>
         ))}
       </ul>
