@@ -102,7 +102,7 @@ export const getTargets = async () => {
       throw new Error(`GET failed: ${response.status}`);
     }
     const data = await response.json();
-    return data;
+    return data; // Return all data from Targets sheet
   } catch (error) {
     console.error('Error fetching targets:', error);
     return [];
@@ -111,13 +111,12 @@ export const getTargets = async () => {
 
 export const addOrUpdateTarget = async (target) => {
   try {
-    // For simplicity, use POST; for update, you may need to check if exists and use PUT
     const response = await fetch(BASE_URL + TARGETS_SHEET, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(target),
+      body: JSON.stringify(target), // No type needed for separate sheet
     });
     if (!response.ok) {
       throw new Error(`POST failed: ${response.status}`);

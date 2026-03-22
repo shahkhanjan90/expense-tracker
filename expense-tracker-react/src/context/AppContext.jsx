@@ -16,6 +16,7 @@ const AppProvider = ({ children }) => {
       const cats = await getCategories();
       setCategories(cats); // Keep as array of objects
       const targs = await getTargets();
+      console.log('Loaded targets:', targs); // Debug log
       setTargets(targs);
     };
     loadData();

@@ -11,7 +11,12 @@ const SummaryCards = () => {
   // Calculate total target for the active month
   const totalTarget = targets
     .filter(target => target.month === activeMonth)
-    .reduce((sum, target) => sum + (Number(target.amount) || 0), 0);
+    .reduce((sum, target) => sum + (Number(target.targets) || 0), 0);
+
+  console.log('Targets:', targets); // Debug
+  console.log('Active month:', activeMonth); // Debug
+  console.log('Filtered targets:', targets.filter(target => target.month === activeMonth)); // Debug
+  console.log('Total target:', totalTarget); // Debug
 
   const utilization = getUtilization(totalExpenses, totalTarget);
 
