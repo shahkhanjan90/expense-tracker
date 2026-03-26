@@ -1,19 +1,40 @@
-const BASE_URL = 'https://sheetdb.io/api/v1/e88t2j8do634o';
-const EXPENSES_SHEET = '?sheet=Expenses';
-const CATEGORIES_SHEET = '?sheet=Categories';
-const TARGETS_SHEET = '?sheet=Targets';
+const BASE_URL = 'https://script.google.com/macros/s/AKfycbxa4g70-XNRGmlDJ-X1oyXzOCTbahYH1jgrPy5pKmgTspobxPCu1UxSdgDvc2ticTLV/exec';
 
-// API functions using fetch for REST API (SheetDB)
+// Retry logic with exponential backoff
+const retryFetch = async (url, options = {}, maxRetries = 3, baseDelay = 1000) => {
+  let lastError;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, {
+        ...options,
+      });
+
+      if (!response.ok && response.status !== 0) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      return response;
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.warn(`Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error('Max retries exceeded');
+};
+
+// ============ EXPENSES ============
 
 export const getExpenses = async () => {
   try {
-    const response = await fetch(BASE_URL + EXPENSES_SHEET);
-    if (!response.ok) {
-      throw new Error(`GET failed: ${response.status}`);
-    }
+    const response = await retryFetch(`${BASE_URL}?type=getExpenses`);
     const data = await response.json();
-    // Sort by createdAt descending
-    return data.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error('Error fetching expenses:', error);
     return [];
@@ -22,18 +43,19 @@ export const getExpenses = async () => {
 
 export const addExpense = async (expense) => {
   try {
-    const response = await fetch(BASE_URL + EXPENSES_SHEET, {
+    const formData = new FormData();
+    formData.append('type', 'addExpense');
+    formData.append('date', expense.date);
+    formData.append('category', expense.category);
+    formData.append('amount', expense.amount);
+    formData.append('description', expense.description);
+
+    const response = await retryFetch(BASE_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(expense),
+      body: formData,
     });
-    if (!response.ok) {
-      throw new Error(`POST failed: ${response.status}`);
-    }
-    // After adding, fetch the updated list
-    return await getExpenses();
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error adding expense:', error);
     throw error;
@@ -42,29 +64,24 @@ export const addExpense = async (expense) => {
 
 export const deleteExpense = async (id) => {
   try {
-    const response = await fetch(`${BASE_URL}${EXPENSES_SHEET}/id/${id}`, {
+    const response = await retryFetch(`${BASE_URL}?type=deleteExpense&id=${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) {
-      throw new Error(`DELETE failed: ${response.status}`);
-    }
-    // After deleting, fetch the updated list
-    return await getExpenses();
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error deleting expense:', error);
     throw error;
   }
 };
 
-// Categories
+// ============ CATEGORIES ============
+
 export const getCategories = async () => {
   try {
-    const response = await fetch(BASE_URL + CATEGORIES_SHEET);
-    if (!response.ok) {
-      throw new Error(`GET failed: ${response.status}`);
-    }
+    const response = await retryFetch(`${BASE_URL}?type=getCategories`);
     const data = await response.json();
-    return data;
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error('Error fetching categories:', error);
     return [];
@@ -73,19 +90,15 @@ export const getCategories = async () => {
 
 export const addCategory = async (category) => {
   try {
-    const cats = await getCategories();
-    const maxId = cats.length > 0 ? Math.max(...cats.map(c => Number(c.id) || 0)) : 0;
-    const newCategoryObj = { id: maxId + 1, name: category };
-    const response = await fetch(BASE_URL + CATEGORIES_SHEET, {
+    const formData = new FormData();
+    formData.append('type', 'addCategory');
+    formData.append('name', category.name);
+    formData.append('budget', category.budget);
+
+    const response = await retryFetch(BASE_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newCategoryObj),
+      body: formData,
     });
-    if (!response.ok) {
-      throw new Error(`POST failed: ${response.status}`);
-    }
     const data = await response.json();
     return data;
   } catch (error) {
@@ -96,12 +109,9 @@ export const addCategory = async (category) => {
 
 export const deleteCategory = async (id) => {
   try {
-    const response = await fetch(`${BASE_URL}${CATEGORIES_SHEET}/id/${id}`, {
+    const response = await retryFetch(`${BASE_URL}?type=deleteCategory&id=${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) {
-      throw new Error(`DELETE failed: ${response.status}`);
-    }
     const data = await response.json();
     return data;
   } catch (error) {
@@ -110,73 +120,37 @@ export const deleteCategory = async (id) => {
   }
 };
 
-// Targets
+// ============ TARGETS ============
+
 export const getTargets = async () => {
   try {
-    const response = await fetch(BASE_URL + TARGETS_SHEET);
-    if (!response.ok) {
-      throw new Error(`GET failed: ${response.status}`);
-    }
+    const response = await retryFetch(`${BASE_URL}?type=getTargets`);
     const data = await response.json();
-    return data; // Return all data from Targets sheet
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error('Error fetching targets:', error);
     return [];
   }
 };
 
-export const addOrUpdateTarget = async (target) => {
+export const addTarget = async (target) => {
   try {
-    const currentTargets = await getTargets();
-    console.log('Current targets:', currentTargets);
-    console.log('Looking for category:', target.category, 'month:', target.month);
-    const existing = currentTargets.find(t => t.category === target.category && t.month === target.month);
-    console.log('Existing target:', existing);
+    const formData = new FormData();
+    formData.append('type', 'addTarget');
+    formData.append('category', target.category);
+    formData.append('targetAmount', target.targetAmount);
 
-    if (existing) {
-      // Update existing target
-      console.log('Updating target with id:', existing.id);
-      const response = await fetch(`${BASE_URL}/id/${existing.id}${TARGETS_SHEET}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ targets: target.targets }),
-      });
-      if (!response.ok) {
-        console.error('PUT response status:', response.status);
-        const errorText = await response.text();
-        console.error('PUT error:', errorText);
-        throw new Error(`PUT failed: ${response.status}`);
-      }
-      console.log('PUT successful');
-    } else {
-      // Add new target
-      const maxId = currentTargets.length > 0 ? Math.max(...currentTargets.map(t => Number(t.id) || 0)) : 0;
-      const newTarget = { id: maxId + 1, ...target };
-      console.log('Adding new target:', newTarget);
-      const response = await fetch(BASE_URL + TARGETS_SHEET, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newTarget),
-      });
-      if (!response.ok) {
-        console.error('POST response status:', response.status);
-        const errorText = await response.text();
-        console.error('POST error:', errorText);
-        throw new Error(`POST failed: ${response.status}`);
-      }
-      console.log('POST successful');
-    }
-
-    // Return updated targets
-    const updated = await getTargets();
-    console.log('Updated targets:', updated);
-    return updated;
+    const response = await retryFetch(BASE_URL, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error adding/updating target:', error);
     throw error;
   }
 };
+
+// Backward compatibility alias
+export const addOrUpdateTarget = addTarget;

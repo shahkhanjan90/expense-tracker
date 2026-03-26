@@ -1,25 +1,97 @@
 // Utility functions for expense calculations
 // All functions are pure and reusable
 
-const DEFAULT_CATEGORY_TARGETS = {
+export const DEFAULT_CATEGORIES = [
+  { id: 1, name: 'Grocery', defaultTarget: 15000 },
+  { id: 2, name: 'Entertainment', defaultTarget: 10000 },
+  { id: 3, name: 'Misc', defaultTarget: 6000 },
+  { id: 4, name: 'Housing', defaultTarget: 45000 },
+  { id: 5, name: 'Medicine', defaultTarget: 2000 },
+  { id: 6, name: 'Shopping', defaultTarget: 6000 },
+  { id: 7, name: 'Transportation', defaultTarget: 8000 },
+  { id: 8, name: 'Maid', defaultTarget: 5000 },
+  { id: 9, name: 'Investments', defaultTarget: 150000 },
+];
+
+export const DEFAULT_CATEGORY_TARGETS = {
   Grocery: 15000,
   Entertainment: 10000,
   Misc: 6000,
-  "Housing (Rent and Maintenance)": 45000,
+  Housing: 45000,
   Medicine: 2000,
   Shopping: 6000,
   Transportation: 8000,
+  Maid: 5000,
   Investments: 150000,
 };
 
-function formatCurrency(value) {
+export function formatCurrency(value) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
   }).format(value);
 }
 
-function validateAmountInput(amountInput) {
+export function getMonthlyExpenses(expenses, monthKey) {
+  if (!expenses || !monthKey) return [];
+  return expenses.filter(exp => getMonthKeyFromDate(exp.date) === monthKey);
+}
+
+export function getTotalExpenses(expenses) {
+  if (!expenses || !Array.isArray(expenses)) return 0;
+  return expenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+}
+
+export function getUtilization(actual, target) {
+  if (!target || target === 0) return 0;
+  return (actual / target) * 100;
+}
+
+export function getExpensesByCategory(expenses) {
+  if (!expenses || !Array.isArray(expenses)) return {};
+  return expenses.reduce((acc, exp) => {
+    const cat = exp.category || 'Other';
+    acc[cat] = (acc[cat] || 0) + Number(exp.amount || 0);
+    return acc;
+  }, {});
+}
+
+export function getOverBudgetCategories(expenses, targets, categories, monthKey) {
+  if (!monthKey) return [];
+  const monthExpenses = getMonthlyExpenses(expenses, monthKey);
+  const categorySpends = getExpensesByCategory(monthExpenses);
+  const overBudget = [];
+  
+  categories.forEach(cat => {
+    const catName = cat.name || cat.id;
+    const spent = categorySpends[catName] || 0;
+    const target = targets.find(t => t.category === catName && t.month === monthKey);
+    const targetAmount = target ? Number(target.targets) : (cat.defaultTarget || 0);
+    
+    if (spent > targetAmount) {
+      overBudget.push({
+        category: catName,
+        spent,
+        target: targetAmount,
+        overBy: spent - targetAmount
+      });
+    }
+  });
+  return overBudget;
+}
+
+export function getPreviousMonthExpenses(expenses, monthKey) {
+  const prevMonth = getPreviousMonthKey(monthKey);
+  return getMonthlyExpenses(expenses, prevMonth);
+}
+
+export function getMonthsTracked(expenses) {
+  if (!expenses || !Array.isArray(expenses)) return 0;
+  const months = new Set(expenses.map(exp => getMonthKeyFromDate(exp.date)));
+  return months.size;
+}
+
+export function validateAmountInput(amountInput) {
   if (amountInput.value === "") {
     amountInput.setCustomValidity("Amount is required.");
     return false;
@@ -35,7 +107,7 @@ function validateAmountInput(amountInput) {
   return true;
 }
 
-function formatDate(dateString) {
+export function formatDate(dateString) {
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) {
     return dateString;
@@ -48,7 +120,7 @@ function formatDate(dateString) {
   }).format(date);
 }
 
-function formatMonthLabel(monthKey) {
+export function formatMonthLabel(monthKey) {
   const [year, month] = monthKey.split("-").map(Number);
   return new Intl.DateTimeFormat("en-US", {
     month: "long",
@@ -56,15 +128,15 @@ function formatMonthLabel(monthKey) {
   }).format(new Date(year, month - 1, 1));
 }
 
-function getCurrentMonthKey() {
+export function getCurrentMonthKey() {
   return getMonthKeyFromDate(new Date().toISOString().slice(0, 10));
 }
 
-function getMonthKeyFromDate(dateString) {
+export function getMonthKeyFromDate(dateString) {
   return dateString.slice(0, 7);
 }
 
-function getPreviousMonthKey(monthKey) {
+export function getPreviousMonthKey(monthKey) {
   const [year, month] = monthKey.split("-").map(Number);
   const date = new Date(year, month - 2, 1);
   const previousYear = date.getFullYear();
@@ -72,20 +144,14 @@ function getPreviousMonthKey(monthKey) {
   return `${previousYear}-${previousMonth}`;
 }
 
-function getFirstDayOfMonth(monthKey) {
+export function getFirstDayOfMonth(monthKey) {
   const [year, month] = monthKey.split("-").map(Number);
   return new Date(year, month - 1, 1).toISOString().slice(0, 10);
 }
 
-function renderTrend(element, currentValue, previousValue, formatter, suffixText) {
-  if (!element) {
-    return;
-  }
-
+export function calculateTrend(currentValue, previousValue) {
   if (!Number.isFinite(previousValue) || previousValue === 0) {
-    element.className = "tile-trend flat";
-    element.textContent = "No baseline from previous month";
-    return;
+    return { arrow: '●', percent: 0, status: 'flat' };
   }
 
   const delta = currentValue - previousValue;
@@ -93,9 +159,9 @@ function renderTrend(element, currentValue, previousValue, formatter, suffixText
   const isDown = delta < 0;
   const percent = Math.abs((delta / previousValue) * 100);
   const arrow = isUp ? "▲" : isDown ? "▼" : "●";
+  const status = isUp ? 'up' : isDown ? 'down' : 'flat';
 
-  element.className = `tile-trend ${isUp ? "up" : isDown ? "down" : "flat"}`;
-  element.textContent = `${arrow} ${percent.toFixed(1)}% (${formatter(Math.abs(delta))}) ${suffixText}`;
+  return { arrow, percent, status };
 }
 
 function slugify(value) {
@@ -131,24 +197,10 @@ function getTargetsForMonth(monthKey, categories, targetsByMonth, categoryTarget
   }, {});
 }
 
-export const getTotalExpenses = (expenses) => {
-  return expenses.reduce((total, expense) => total + (Number(expense.amount) || 0), 0);
-};
-
 export const getCategoryTotals = (expenses) => {
   return expenses.reduce((totals, expense) => {
     const category = expense.category || 'Uncategorized';
     totals[category] = (totals[category] || 0) + (Number(expense.amount) || 0);
     return totals;
   }, {});
-};
-
-export const getMonthlyExpenses = (expenses, month) => {
-  // month in YYYY-MM format
-  return expenses.filter(expense => expense.date && expense.date.startsWith(month));
-};
-
-export const getUtilization = (total, target) => {
-  if (target === 0) return 0;
-  return (total / target) * 100;
 };

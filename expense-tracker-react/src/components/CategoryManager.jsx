@@ -5,48 +5,35 @@ const CategoryManager = () => {
   const { categories, addCategory, removeCategory } = useContext(AppContext);
   const [newCategory, setNewCategory] = useState('');
 
-  const handleAddCategory = async () => {
-    if (!newCategory.trim()) {
-      alert('Category name is required');
+  const handleAddCategory = () => {
+    if (newCategory.trim() === '') {
+      alert('Category name cannot be empty');
       return;
     }
-    if (categories.some(cat => cat.name === newCategory.trim())) {
-      alert('Category already exists');
-      return;
-    }
-    await addCategory(newCategory.trim());
+    addCategory({ id: Date.now().toString(), name: newCategory.trim() });
     setNewCategory('');
-  };
-
-  const handleRemoveCategory = async (id) => {
-    if (categories.length <= 1) {
-      alert('At least one category is required');
-      return;
-    }
-    await removeCategory(id);
   };
 
   return (
     <div className="card">
       <h2>Manage Categories</h2>
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ display: 'flex', marginBottom: '10px' }}>
         <input
           type="text"
           value={newCategory}
           onChange={(e) => setNewCategory(e.target.value)}
           placeholder="New category name"
-          className="input"
-          style={{ marginRight: '10px', marginBottom: '10px' }}
+          style={{ flex: 1, marginRight: '10px', padding: '8px' }}
         />
-        <button onClick={handleAddCategory} className="button">
-          Add Category
+        <button onClick={handleAddCategory} style={{ padding: '8px 16px' }}>
+          Add
         </button>
       </div>
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {categories.map((category, index) => (
-          <li key={category.id || index} style={{ padding: '5px 0', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>{category.name} - Default Target: ₹{category.defaultTarget || 0}</span>
-            <button onClick={() => handleRemoveCategory(category.id)} className="button" style={{ padding: '6px 12px', fontSize: '14px' }}>
+      <ul>
+        {categories.map((category) => (
+          <li key={category.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+            <span>{category.name}</span>
+            <button onClick={() => removeCategory(category.id)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>
               Remove
             </button>
           </li>

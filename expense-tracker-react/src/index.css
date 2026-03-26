@@ -52,6 +52,10 @@
 
 body {
   margin: 0;
+  font-family: "Inter", sans-serif;
+  color: var(--text);
+  background-color: var(--bg);
+  min-height: 100vh;
 }
 
 #root {
@@ -112,12 +116,12 @@ code {
 
 /* App specific styles */
 .card {
-  background: var(--bg);
+  background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: 8px;
   box-shadow: var(--shadow);
-  margin: 16px 0;
+  padding: 20px;
+  margin-bottom: 20px;
 }
 
 .button {
@@ -167,4 +171,55 @@ code {
   h2 {
     font-size: 18px;
   }
+}
+
+/* Card styles */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Button styles */
+button {
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Input styles */
+input, select {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Dark mode styles */
+.dark {
+  --bg: #0f172a;
+  --card: rgba(30, 41, 59, 0.95);
+  --text: #f1f5f9;
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --border: rgba(71, 85, 105, 0.28);
+  --shadow: 0 16px 36px rgba(15, 23, 42, 0.3);
 }
