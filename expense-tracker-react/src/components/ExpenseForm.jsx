@@ -151,9 +151,12 @@ const ExpenseForm = () => {
             }}
           >
             <option value="" disabled>Select a category</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.name}>{cat.name}</option>
-            ))}
+            {categories.map(cat => {
+              const catName = cat.name || cat[1] || Object.values(cat)[1];
+              return (
+                <option key={catName} value={catName}>{catName}</option>
+              );
+            })}
           </select>
         </div>
         <div style={{ marginBottom: '15px' }}>

@@ -84,7 +84,7 @@ const TargetsManager = () => {
 
       <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '15px' }}>
         {categories.map(category => (
-          <div key={category.id} style={{ marginBottom: '15px', padding: '12px', backgroundColor: 'var(--bg-soft)', borderRadius: '6px' }}>
+          <div key={category.name} style={{ marginBottom: '15px', padding: '12px', backgroundColor: 'var(--bg-soft)', borderRadius: '6px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
               {category.name}
               <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '8px' }}>

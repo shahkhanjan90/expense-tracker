@@ -31,9 +31,9 @@ const CategoryManager = () => {
       </div>
       <ul>
         {categories.map((category) => (
-          <li key={category.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+          <li key={category.name} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
             <span>{category.name}</span>
-            <button onClick={() => removeCategory(category.id)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>
+            <button onClick={() => removeCategory(category.name)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>
               Remove
             </button>
           </li>

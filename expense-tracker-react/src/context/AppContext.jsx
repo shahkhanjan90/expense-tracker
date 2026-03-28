@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
-import { getExpenses, getCategories, getTargets, addOrUpdateTarget, addExpense as addExpenseAPI, deleteExpense as deleteExpenseAPI } from '../services/api';
+import { getExpenses, getCategories, getTargets, addOrUpdateTarget, addExpense as addExpenseAPI, deleteExpense as deleteExpenseAPI, deleteCategory as deleteCategoryAPI } from '../services/api';
 import { DEFAULT_CATEGORIES, getCurrentMonthKey } from '../utils/utils';
 
 export const AppContext = createContext();
@@ -58,8 +58,17 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const removeCategory = (categoryId) => {
-    setCategories((prevCategories) => prevCategories.filter((cat) => cat.id !== categoryId));
+  const removeCategory = async (categoryName) => {
+    try {
+      setCategories((prevCategories) => prevCategories.filter((cat) => cat.name !== categoryName));
+      await deleteCategoryAPI(categoryName);
+    } catch (error) {
+      console.error('Error removing category:', error);
+      // Re-fetch categories on error to restore state
+      const fetchedCategories = await getCategories();
+      setCategories(fetchedCategories || DEFAULT_CATEGORIES);
+      throw error;
+    }
   };
 
   const addExpense = async (expense) => {

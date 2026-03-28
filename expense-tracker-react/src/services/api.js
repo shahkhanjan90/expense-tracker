@@ -1,4 +1,4 @@
-const BASE_URL = 'https://script.google.com/macros/s/AKfycbxa4g70-XNRGmlDJ-X1oyXzOCTbahYH1jgrPy5pKmgTspobxPCu1UxSdgDvc2ticTLV/exec';
+const BASE_URL = 'https://script.google.com/macros/s/AKfycbzzBrXJDjAUeIafTcx7Qz29rK-qhaP9fWS4VPDe_B-PPrrizJ9f7NUF2R9082T-LNkq/exec';
 
 // Retry logic with exponential backoff
 const retryFetch = async (url, options = {}, maxRetries = 3, baseDelay = 1000) => {
@@ -64,8 +64,13 @@ export const addExpense = async (expense) => {
 
 export const deleteExpense = async (id) => {
   try {
-    const response = await retryFetch(`${BASE_URL}?type=deleteExpense&id=${id}`, {
-      method: 'DELETE',
+    const formData = new FormData();
+    formData.append('type', 'deleteExpense');
+    formData.append('id', id);
+
+    const response = await retryFetch(BASE_URL, {
+      method: 'POST',
+      body: formData,
     });
     const data = await response.json();
     return data;
@@ -107,10 +112,15 @@ export const addCategory = async (category) => {
   }
 };
 
-export const deleteCategory = async (id) => {
+export const deleteCategory = async (name) => {
   try {
-    const response = await retryFetch(`${BASE_URL}?type=deleteCategory&id=${id}`, {
-      method: 'DELETE',
+    const formData = new FormData();
+    formData.append('type', 'deleteCategory');
+    formData.append('name', name);
+
+    const response = await retryFetch(BASE_URL, {
+      method: 'POST',
+      body: formData,
     });
     const data = await response.json();
     return data;
