@@ -32,6 +32,64 @@ export function formatCurrency(value) {
   }).format(value);
 }
 
+export function getCategoryName(category) {
+  if (!category) return 'Uncategorized';
+  if (typeof category === 'string') return category;
+  return category.name || category.category || category.title || 'Uncategorized';
+}
+
+export function getCategoryDefaultTarget(category) {
+  if (!category || typeof category === 'string') return 0;
+  return Number(
+    category.defaultTarget ??
+    category.budget ??
+    category.targetAmount ??
+    category.targets ??
+    0
+  ) || 0;
+}
+
+export function getTargetMonth(target) {
+  const value = target?.month || target?.label || '';
+  if (!value) return '';
+  if (typeof value === 'string' && /^\d{4}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value).slice(0, 7);
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+export function getTargetAmount(target) {
+  return Number(
+    target?.targets ??
+    target?.targetAmount ??
+    target?.amount ??
+    0
+  ) || 0;
+}
+
+export function findTargetForCategoryMonth(targets, categoryName, monthKey) {
+  if (!Array.isArray(targets) || !categoryName || !monthKey) {
+    return null;
+  }
+
+  for (let index = targets.length - 1; index >= 0; index -= 1) {
+    const target = targets[index];
+    if (target?.category === categoryName && getTargetMonth(target) === monthKey) {
+      return target;
+    }
+  }
+
+  return null;
+}
+
 export function getMonthlyExpenses(expenses, monthKey) {
   if (!expenses || !monthKey) return [];
   return expenses.filter(exp => getMonthKeyFromDate(exp.date) === monthKey);
@@ -63,10 +121,10 @@ export function getOverBudgetCategories(expenses, targets, categories, monthKey)
   const overBudget = [];
   
   categories.forEach(cat => {
-    const catName = cat.name || cat.id;
+    const catName = getCategoryName(cat);
     const spent = categorySpends[catName] || 0;
-    const target = targets.find(t => t.category === catName && t.month === monthKey);
-    const targetAmount = target ? Number(target.targets) : (cat.defaultTarget || 0);
+    const target = findTargetForCategoryMonth(targets, catName, monthKey);
+    const targetAmount = target ? getTargetAmount(target) : getCategoryDefaultTarget(cat);
     
     if (spent > targetAmount) {
       overBudget.push({
@@ -162,39 +220,6 @@ export function calculateTrend(currentValue, previousValue) {
   const status = isUp ? 'up' : isDown ? 'down' : 'flat';
 
   return { arrow, percent, status };
-}
-
-function slugify(value) {
-  return value.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-").replaceAll(/(^-|-$)/g, "");
-}
-
-function escapeHtml(value) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function getBaseTarget(category, categoryTargets) {
-  const configured = categoryTargets[category];
-  if (Number.isFinite(configured)) {
-    return configured;
-  }
-  if (Number.isFinite(DEFAULT_CATEGORY_TARGETS[category])) {
-    return DEFAULT_CATEGORY_TARGETS[category];
-  }
-  return 0;
-}
-
-function getTargetsForMonth(monthKey, categories, targetsByMonth, categoryTargets) {
-  const customTargets = targetsByMonth[monthKey] || {};
-  return categories.reduce((accumulator, category) => {
-    const customValue = customTargets[category];
-    accumulator[category] = Number.isFinite(customValue) ? customValue : getBaseTarget(category, categoryTargets);
-    return accumulator;
-  }, {});
 }
 
 export const getCategoryTotals = (expenses) => {

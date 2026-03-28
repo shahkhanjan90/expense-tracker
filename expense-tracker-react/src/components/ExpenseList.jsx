@@ -1,80 +1,83 @@
-import { useContext } from "react";
-import { AppContext } from "../context/AppContext";
-import { getMonthlyExpenses, formatDate } from "../utils/utils";
+import { useContext, useMemo, useState } from 'react';
+import { AppContext } from '../context/AppContextBase';
+import { formatCurrency, formatDate, formatMonthLabel, getMonthlyExpenses } from '../utils/utils';
 
 const ExpenseList = () => {
   const { expenses, activeMonth, deleteExpense } = useContext(AppContext);
+  const [query, setQuery] = useState('');
 
   const monthlyExpenses = getMonthlyExpenses(expenses, activeMonth);
+  const filteredExpenses = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const sortedExpenses = [...monthlyExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  if (!monthlyExpenses || monthlyExpenses.length === 0) {
-    return (
-      <div className="card">
-        <h2>Expenses for {activeMonth || 'Selected Month'}</h2>
-        <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '20px' }}>No expenses recorded for this month</p>
-      </div>
-    );
-  }
+    if (!normalizedQuery) {
+      return sortedExpenses;
+    }
 
-  const total = monthlyExpenses.reduce((sum, exp) => sum + Number(exp.amount || 0), 0);
+    return sortedExpenses.filter((expense) => {
+      return [expense.category, expense.description, expense.date]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedQuery));
+    });
+  }, [monthlyExpenses, query]);
+
+  const total = monthlyExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
 
   return (
-    <div className="card">
-      <h2>Expenses for {activeMonth}</h2>
-      <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: 'var(--bg-soft)', borderRadius: '4px' }}>
-        <strong>Total: ₹{total.toFixed(2)}</strong>
+    <section className="prototype-panel">
+      <div className="section-heading section-heading--spread">
+        <div>
+          <h2>Expenses - {formatMonthLabel(activeMonth)}</h2>
+        </div>
+        <div className="total-pill">
+          <span>Total</span>
+          <strong>{formatCurrency(total)}</strong>
+        </div>
       </div>
 
-      <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
-        {monthlyExpenses.map((expense) => (
-          <div
-            key={expense.id}
-            style={{
-              border: "1px solid var(--border)",
-              padding: "12px",
-              marginBottom: "10px",
-              borderRadius: "6px",
-              backgroundColor: 'var(--card)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-            }}
-          >
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                <strong style={{ color: 'var(--primary)' }}>{expense.category}</strong>
-                <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{formatDate(expense.date)}</span>
+      <input
+        className="app-input expense-search"
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Search expenses..."
+      />
+
+      {filteredExpenses.length === 0 ? (
+        <div className="empty-state">
+          {monthlyExpenses.length === 0 ? 'No expenses recorded for this month.' : 'No expenses match your search.'}
+        </div>
+      ) : (
+        <div className="expense-list">
+          {filteredExpenses.map((expense) => (
+            <article key={expense.id} className="expense-item">
+              <div className="expense-item__content">
+                <div className="expense-item__topline">
+                  <div className="expense-item__headline">
+                    <strong>{formatDate(expense.date)}</strong>
+                    <span className="expense-chip">{expense.category}</span>
+                  </div>
+                  <strong className="expense-item__amount">{formatCurrency(Number(expense.amount))}</strong>
+                </div>
+                <p>{expense.description}</p>
               </div>
-              <div style={{ fontSize: '14px', color: 'var(--muted)' }}>{expense.description}</div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <strong style={{ fontSize: '16px', color: 'var(--primary)', minWidth: '80px', textAlign: 'right' }}>₹{Number(expense.amount).toFixed(2)}</strong>
               <button
+                type="button"
+                className="app-button app-button--danger app-button--small"
                 onClick={async () => {
                   if (window.confirm('Are you sure you want to delete this expense?')) {
                     await deleteExpense(expense.id);
                   }
                 }}
-                style={{
-                  padding: '6px 10px',
-                  backgroundColor: 'var(--danger)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  transition: 'opacity 0.2s'
-                }}
-                onMouseEnter={(e) => e.target.style.opacity = '0.8'}
-                onMouseLeave={(e) => e.target.style.opacity = '1'}
               >
                 Delete
               </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 };
 

@@ -1,8 +1,22 @@
-import { createContext, useState, useEffect } from 'react';
-import { getExpenses, getCategories, getTargets, addOrUpdateTarget, addExpense as addExpenseAPI, deleteExpense as deleteExpenseAPI, deleteCategory as deleteCategoryAPI } from '../services/api';
-import { DEFAULT_CATEGORIES, getCurrentMonthKey } from '../utils/utils';
-
-export const AppContext = createContext();
+import { useState, useEffect } from 'react';
+import {
+  getExpenses,
+  getCategories,
+  getTargets,
+  addOrUpdateTarget as addOrUpdateTargetAPI,
+  addCategory as addCategoryAPI,
+  addExpense as addExpenseAPI,
+  deleteExpense as deleteExpenseAPI,
+  deleteCategory as deleteCategoryAPI,
+} from '../services/api';
+import {
+  DEFAULT_CATEGORIES,
+  findTargetForCategoryMonth,
+  getCategoryName,
+  getCurrentMonthKey,
+  getTargetAmount,
+} from '../utils/utils';
+import { AppContext } from './AppContextBase';
 
 export const AppProvider = ({ children }) => {
   const [activeMonth, setActiveMonth] = useState(getCurrentMonthKey());
@@ -51,17 +65,34 @@ export const AppProvider = ({ children }) => {
 
   const addCategory = async (category) => {
     try {
-      setCategories((prevCategories) => [...prevCategories, category]);
-      // Optionally persist to API
+      await addCategoryAPI(category);
+      const fetchedCategories = await getCategories();
+      const savedCategory = fetchedCategories.find(
+        (item) => getCategoryName(item) === category.name
+      );
+      if (!savedCategory) {
+        throw new Error('Category was not persisted with the expected schema.');
+      }
+      setCategories(fetchedCategories);
     } catch (error) {
       console.error('Error adding category:', error);
+      const fetchedCategories = await getCategories();
+      setCategories(fetchedCategories.length > 0 ? fetchedCategories : DEFAULT_CATEGORIES);
+      throw error;
     }
   };
 
   const removeCategory = async (categoryName) => {
     try {
-      setCategories((prevCategories) => prevCategories.filter((cat) => cat.name !== categoryName));
       await deleteCategoryAPI(categoryName);
+      const fetchedCategories = await getCategories();
+      const categoryStillExists = fetchedCategories.some(
+        (category) => getCategoryName(category) === categoryName
+      );
+      if (categoryStillExists) {
+        throw new Error('Category still exists after delete.');
+      }
+      setCategories(fetchedCategories.length > 0 ? fetchedCategories : DEFAULT_CATEGORIES);
     } catch (error) {
       console.error('Error removing category:', error);
       // Re-fetch categories on error to restore state
@@ -72,34 +103,54 @@ export const AppProvider = ({ children }) => {
   };
 
   const addExpense = async (expense) => {
+    const previousExpenses = expenses;
     try {
-      // Add to local state immediately
       setExpenses((prevExpenses) => [...prevExpenses, expense]);
-      // Persist to API
       await addExpenseAPI(expense);
+      const fetchedExpenses = await getExpenses();
+      const savedExpense = fetchedExpenses.some((item) => String(item.id) === String(expense.id));
+      if (!savedExpense) {
+        throw new Error('Expense was not persisted.');
+      }
+      setExpenses(fetchedExpenses);
     } catch (error) {
+      setExpenses(previousExpenses);
       console.error('Error adding expense:', error);
       throw error;
     }
   };
 
   const deleteExpense = async (id) => {
+    const previousExpenses = expenses;
     try {
       setExpenses((prevExpenses) => prevExpenses.filter((expense) => expense.id !== id));
-      // Persist deletion to API
       await deleteExpenseAPI(id);
+      const fetchedExpenses = await getExpenses();
+      const expenseStillExists = fetchedExpenses.some((item) => String(item.id) === String(id));
+      if (expenseStillExists) {
+        throw new Error('Expense still exists after delete.');
+      }
+      setExpenses(fetchedExpenses);
     } catch (error) {
+      setExpenses(previousExpenses);
       console.error('Error deleting expense:', error);
       throw error;
     }
   };
 
   const addOrUpdateTarget = async (target) => {
+    const previousTargets = targets;
     try {
-      const result = await addOrUpdateTarget(target);
-      setTargets(result || []);
-      return result;
+      await addOrUpdateTargetAPI(target);
+      const fetchedTargets = await getTargets();
+      const savedTarget = findTargetForCategoryMonth(fetchedTargets, target.category, target.month);
+      if (!savedTarget || getTargetAmount(savedTarget) !== Number(target.targets ?? target.targetAmount ?? 0)) {
+        throw new Error('Target was not persisted.');
+      }
+      setTargets(fetchedTargets || []);
+      return fetchedTargets;
     } catch (error) {
+      setTargets(previousTargets);
       console.error('Error updating target:', error);
       throw error;
     }

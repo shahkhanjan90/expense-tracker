@@ -1,45 +1,91 @@
 import { useContext, useState } from 'react';
-import { AppContext } from '../context/AppContext';
+import { AppContext } from '../context/AppContextBase';
+import { formatCurrency, getCategoryDefaultTarget, getCategoryName } from '../utils/utils';
 
 const CategoryManager = () => {
   const { categories, addCategory, removeCategory } = useContext(AppContext);
   const [newCategory, setNewCategory] = useState('');
+  const [defaultTarget, setDefaultTarget] = useState('');
+  const [message, setMessage] = useState('');
 
-  const handleAddCategory = () => {
-    if (newCategory.trim() === '') {
-      alert('Category name cannot be empty');
+  const handleAddCategory = async () => {
+    const trimmedName = newCategory.trim();
+    if (!trimmedName) {
+      setMessage('Category name cannot be empty.');
       return;
     }
-    addCategory({ id: Date.now().toString(), name: newCategory.trim() });
-    setNewCategory('');
+
+    try {
+      await addCategory({
+        id: Date.now().toString(),
+        name: trimmedName,
+        defaultTarget: Number(defaultTarget || 0),
+        budget: Number(defaultTarget || 0),
+      });
+      setNewCategory('');
+      setDefaultTarget('');
+      setMessage('Category added successfully.');
+      window.setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      setMessage('Could not add category right now.');
+      console.error(error);
+    }
   };
 
   return (
-    <div className="card">
-      <h2>Manage Categories</h2>
-      <div style={{ display: 'flex', marginBottom: '10px' }}>
+    <section className="prototype-panel prototype-panel--tall">
+      <div className="section-heading section-heading--spread">
+        <h2>Manage Categories</h2>
+        <span className="section-chip">Applies to all months</span>
+      </div>
+
+      {message && <div className="status-banner status-banner--info">{message}</div>}
+
+      <div className="category-create">
         <input
+          className="app-input"
           type="text"
           value={newCategory}
-          onChange={(e) => setNewCategory(e.target.value)}
+          onChange={(event) => setNewCategory(event.target.value)}
           placeholder="New category name"
-          style={{ flex: 1, marginRight: '10px', padding: '8px' }}
         />
-        <button onClick={handleAddCategory} style={{ padding: '8px 16px' }}>
-          Add
+        <input
+          className="app-input"
+          type="number"
+          min="0"
+          step="100"
+          value={defaultTarget}
+          onChange={(event) => setDefaultTarget(event.target.value)}
+          placeholder="Default target (INR)"
+        />
+        <button type="button" className="app-button app-button--primary" onClick={handleAddCategory}>
+          Add Category
         </button>
       </div>
-      <ul>
-        {categories.map((category) => (
-          <li key={category.name} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-            <span>{category.name}</span>
-            <button onClick={() => removeCategory(category.name)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+
+      <div className="category-list">
+        {categories.map((category) => {
+          const categoryName = getCategoryName(category);
+          const defaultBudget = getCategoryDefaultTarget(category);
+
+          return (
+            <div key={categoryName} className="list-item">
+              <div className="list-item__main">
+                <strong>{categoryName}</strong>
+                <span>Default: {formatCurrency(defaultBudget)}</span>
+              </div>
+              <button
+                type="button"
+                className="app-button app-button--danger app-button--small"
+                onClick={() => removeCategory(categoryName)}
+              >
+                Remove
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 };
 

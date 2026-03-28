@@ -1,4 +1,7 @@
-const BASE_URL = 'https://script.google.com/macros/s/AKfycbzzBrXJDjAUeIafTcx7Qz29rK-qhaP9fWS4VPDe_B-PPrrizJ9f7NUF2R9082T-LNkq/exec';
+const SCRIPT_BASE_URL = 'https://script.google.com/macros/s/AKfycbwEQbN1F1h5kFVlIVmzuOj0ZR2G2D0pnybDAYWqB10JspEvgCJGlJ8yNiqlfiY0_fE/exec';
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? '/api' : SCRIPT_BASE_URL);
 
 // Retry logic with exponential backoff
 const retryFetch = async (url, options = {}, maxRetries = 3, baseDelay = 1000) => {
@@ -45,10 +48,12 @@ export const addExpense = async (expense) => {
   try {
     const formData = new FormData();
     formData.append('type', 'addExpense');
-    formData.append('date', expense.date);
-    formData.append('category', expense.category);
+    formData.append('id', expense.id);
     formData.append('amount', expense.amount);
+    formData.append('category', expense.category);
     formData.append('description', expense.description);
+    formData.append('date', expense.date);
+    formData.append('createdAt', expense.createdAt || new Date().toISOString());
 
     const response = await retryFetch(BASE_URL, {
       method: 'POST',
@@ -97,8 +102,9 @@ export const addCategory = async (category) => {
   try {
     const formData = new FormData();
     formData.append('type', 'addCategory');
+    formData.append('id', category.id);
     formData.append('name', category.name);
-    formData.append('budget', category.budget);
+    formData.append('defaultTarget', category.defaultTarget ?? category.budget ?? 0);
 
     const response = await retryFetch(BASE_URL, {
       method: 'POST',
@@ -148,7 +154,8 @@ export const addTarget = async (target) => {
     const formData = new FormData();
     formData.append('type', 'addTarget');
     formData.append('category', target.category);
-    formData.append('targetAmount', target.targetAmount);
+    formData.append('month', target.month);
+    formData.append('targetAmount', target.targetAmount ?? target.targets ?? 0);
 
     const response = await retryFetch(BASE_URL, {
       method: 'POST',
